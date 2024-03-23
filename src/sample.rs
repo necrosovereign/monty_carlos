@@ -36,7 +36,7 @@ use fitting::FittingDistribution;
 /// as well as a way to store the generated dataset.
 pub trait Sample {
     /// This method randomly generates a dataset using `rng` and store it.
-    fn generate(&mut self, rng: &mut impl rand::Rng);
+    fn generate(&mut self, rng: &mut dyn rand::RngCore);
 
     /// This method calculates a statistic from the stored dataset and returns it.
     ///
@@ -83,7 +83,7 @@ where
 {
     /// Generates `self.datapoint_count()` floating-point numbers
     /// using `self.distr()` implementaion of [`Distribution<f64>`] and stores them.
-    fn generate(&mut self, rng: &mut impl rand::Rng) {
+    fn generate(&mut self, rng: &mut dyn rand::RngCore) {
         // Generates a random sorted slice of `self.datapoint_count()` floating-point numbers.
         self.samples.fill_with(|| self.distr.sample(rng));
         self.samples.sort_by(f64::total_cmp);
@@ -194,7 +194,7 @@ where
     D: FittingDistribution,
 {
     /// Behaves identically to [`KSSample::generate`].
-    fn generate(&mut self, rng: &mut impl rand::Rng) {
+    fn generate(&mut self, rng: &mut dyn rand::RngCore) {
         self.inner.generate(rng);
     }
 
