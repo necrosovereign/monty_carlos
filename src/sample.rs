@@ -46,6 +46,26 @@ pub trait Sample {
     fn evaluate(&self) -> f64;
 }
 
+impl<T: Sample + ?Sized> Sample for Box<T> {
+    fn generate(&mut self, rng: &mut dyn rand::RngCore) {
+        <T as Sample>::generate(self, rng);
+    }
+
+    fn evaluate(&self) -> f64 {
+        <T as Sample>::evaluate(self)
+    }
+}
+
+impl<T: Sample + ?Sized> Sample for &mut T {
+    fn generate(&mut self, rng: &mut dyn rand::RngCore) {
+        <T as Sample>::generate(self, rng);
+    }
+
+    fn evaluate(&self) -> f64 {
+        <T as Sample>::evaluate(self)
+    }
+}
+
 /// An implementor of [Sample] for simulating the Kolmogorov-Smirnov test.
 ///
 /// [Kolmogorov-Smirnov test](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) evaluates how likely is it, for the empirical dataset to come from a
