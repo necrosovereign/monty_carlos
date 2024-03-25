@@ -28,7 +28,7 @@ pub mod fitting;
 use rand::distributions::Distribution;
 use statrs::distribution::ContinuousCDF;
 
-use fitting::FittingDistribution;
+use fitting::DistributionFit;
 
 /// A trait describing how to generate and evaluate samples for a Monte-Carlo simulation.
 ///
@@ -87,7 +87,7 @@ impl<T: Sample + ?Sized> Sample for &mut T {
 ///
 /// [`KSSample`] is designed for the simulation of the exactly such process. It's configured with the
 /// theoretical distribution with the CDF `F` and the number of datapoints of simulated datasets
-/// `n`.
+/// `n`. The generic parameter `D` is the type of the theoretical distribution.
 #[allow(clippy::module_name_repetitions)]
 pub struct KSSample<D> {
     distr: D,
@@ -115,17 +115,17 @@ where
     }
 }
 
-impl<D> KSSample<D>
-where
-    D: ContinuousCDF<f64, f64>,
-{
+impl<T> KSSample<T> {
     /// Calculates the `D_max` statistic defined by Kolmogorov-Smirnov test between the dataset
     /// stored in `self` and the distribution `distr`.
     ///
     /// Uses `distr`'s implementation of [`ContinuousCDF`].
     ///
     /// See documentation of [`KSSample`] for the definition of `D_max`
-    fn dmax(&self, distr: &D) -> f64 {
+    fn dmax<D>(&self, distr: &D) -> f64
+    where
+        D: ContinuousCDF<f64, f64>,
+    {
         let n = self.datapoint_count();
         // Creates an iterator of the maximal absolute deviations between each step of the
         // empirical distribution and the corresponding fragment of `distr`'s CDF.
@@ -185,33 +185,38 @@ impl<D> KSSample<D> {
 /// [`FittingDistribution`] trait.
 ///
 /// [`LillieforsSample`] acts as a wrapper for [`KSSample`] with redefined [`Sample::evaluate`] method.
+/// The parameter `Gen` corresponds to the parameter of `D` of [`KSSample`]. The parameter `Fit`
+/// describes which kind of distrubition is estimated from the dataset.
 #[allow(clippy::module_name_repetitions)]
-pub struct LillieforsSample<D> {
-    inner: KSSample<D>,
+pub struct LillieforsSample<Gen, Fit> {
+    inner: KSSample<Gen>,
+    fit_kind: Fit,
 }
 
-impl<D> LillieforsSample<D> {
+impl<Gen, Fit> LillieforsSample<Gen, Fit> {
     /// Creates an instance of [`LillieforsSample`] that corresponds to the instance of
     /// [`KSSample`] created by the instances of [`KSSample::new`] with the same arguments.
     ///
     /// Returns [None] when `datapoint_count == 0`.
-    pub fn new(distr: D, num_samples: usize) -> Option<Self> {
+    pub fn new(distr: Gen, num_samples: usize, fit_kind: Fit) -> Option<Self> {
         Some(Self {
             inner: KSSample::new(distr, num_samples)?,
+            fit_kind,
         })
     }
 
     /// Returns the distribution used by [`Self::generate`] to generate a dataset.
-    pub fn distr(&self) -> &D {
+    pub fn distr(&self) -> &Gen {
         self.inner.distr()
     }
 }
 
-impl<D> Sample for LillieforsSample<D>
+impl<Gen, Fit, D> Sample for LillieforsSample<Gen, Fit>
 where
-    D: Distribution<f64>,
+    Gen: Distribution<f64>,
+    Gen: ContinuousCDF<f64, f64>,
     D: ContinuousCDF<f64, f64>,
-    D: FittingDistribution,
+    Fit: DistributionFit<Distr = D>,
 {
     /// Behaves identically to [`KSSample::generate`].
     fn generate(&mut self, rng: &mut dyn rand::RngCore) {
@@ -221,7 +226,7 @@ where
     /// Behaves identically to [`KSSample::evaluate`], except uses the distribution fit to
     /// the stored dataset by [`FittingDistribution::fit`] instead of `self.distr()`.
     fn evaluate(&self) -> f64 {
-        let sample_distr = D::fit(&self.inner.samples);
+        let sample_distr = self.fit_kind.fit(&self.inner.samples);
         self.inner.dmax(&sample_distr)
     }
 }
