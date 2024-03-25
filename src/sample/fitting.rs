@@ -18,17 +18,29 @@
 //! from the dataset. [`FittingDistribution`] is a way to describe such a method.
 use statrs::{distribution::Normal, statistics::Statistics};
 
-#[allow(clippy::module_name_repetitions)]
-/// A trait for probability distributions that can be constructed from a dataset.
-pub trait FittingDistribution {
-    /// Constructs `Self` from `samples` dataset in a way that approximates its distribution.
-    fn fit(samples: &[f64]) -> Self;
+/// A trait to construct probability distribution from a dataset
+///
+/// The implementor should contain the information about which kind of probability distribution should be
+/// constructed.
+pub trait DistributionFit {
+    /// The Distribution that will be constructed.
+    type Distr;
+    /// Constructs a probability distribution of the kind described by `self` with parameters
+    /// determined by `samples`.
+    ///
+    /// The constructed distribution should approximate the distribution of `samples`.
+    fn fit(&self, samples: &[f64]) -> Self::Distr;
 }
 
-impl FittingDistribution for Normal {
+/// An implementor of [`DistributionFit`] that constructs a normal distribution.
+struct NormalFit;
+
+impl DistributionFit for NormalFit {
+    type Distr = Normal;
+
     /// Returns a normal distribution with the mean equal to the mean of `samples` and the standard
     /// deviation equal to the unbiased standard deviation of `samples`.
-    fn fit(samples: &[f64]) -> Self {
+    fn fit(&self, samples: &[f64]) -> Normal {
         let mean = Statistics::mean(samples);
         let stdev = Statistics::std_dev(samples);
         Normal::new(mean, stdev).unwrap()
