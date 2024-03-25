@@ -2,7 +2,7 @@
 name = "monty_carlos"
 authors = ["Vladimir Kharchev <necrosovereign@gmail.com>"]
 description = "A library for Monte-Carlo simulations"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/necrosovereign/monty_carlos"

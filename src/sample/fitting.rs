@@ -33,7 +33,7 @@ pub trait DistributionFit {
 }
 
 /// An implementor of [`DistributionFit`] that constructs a normal distribution.
-struct NormalFit;
+pub struct NormalFit;
 
 impl DistributionFit for NormalFit {
     type Distr = Normal;
