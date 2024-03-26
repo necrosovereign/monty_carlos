@@ -241,6 +241,26 @@ impl<S: Sample> MonteCarlo<S> {
             .collect::<Vec<_>>()
             .into()
     }
+
+    /// Runs a Monte-Carlo simulation and returns the value of the statistic, such that
+    /// a statistic is less the returned values with probability `alpha`.
+    ///
+    /// Essentially the inverse to [`Self::simulate_pvalue`]
+    pub fn simulate_statistic(mut self, alpha: f64) -> f64 {
+        // Collect statistics from each iteration into a vector in the increasing order.
+        let mut full_distribution: Vec<f64> = (0..self.iterations)
+            .map(|_| self.simulate_iteration())
+            .collect();
+        full_distribution.sort_by(f64::total_cmp);
+        // Calculate the index corresponding to `alpha`
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
+        let index: usize = (full_distribution.len() as f64 * alpha) as usize;
+        full_distribution[index]
+    }
 }
 
 impl<S> MonteCarlo<S> {
