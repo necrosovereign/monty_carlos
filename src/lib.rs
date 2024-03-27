@@ -152,6 +152,7 @@ use rand::SeedableRng;
 
 pub mod sample;
 use sample::Sample;
+use statrs::statistics::Statistics;
 
 /// A struct to keep track of the fraction of the values less then the test value.
 struct CmlRatio {
@@ -260,6 +261,19 @@ impl<S: Sample> MonteCarlo<S> {
         )]
         let index: usize = (full_distribution.len() as f64 * alpha) as usize;
         full_distribution[index]
+    }
+
+    /// Runs a Monte-Carlo simulation and returns the mean and the standard deviation from the
+    /// generated statistics.
+    pub fn simulate_mean_stdev(mut self) -> (f64, f64) {
+        // Collect statistics from each iteration into a vector.
+        let full_distribution: Vec<f64> = (0..self.iterations)
+            .map(|_| self.simulate_iteration())
+            .collect();
+        (
+            Statistics::mean(&full_distribution),
+            Statistics::std_dev(&full_distribution),
+        )
     }
 }
 
