@@ -57,6 +57,15 @@ impl CmlRatio {
 ///
 /// [`MonteCarlo<S>`] repeatedly calls [`Sample::generate`] and [`Sample::evaluate`] methods of `S` and
 /// calculates a result from the statistics returned by [`Sample::evaluate`].
+///
+/// The method [`MonteCarlo::simulate`] runs the simulation and return an instance of
+/// [`monte_carlo::Distribution`](crate::monte_carlo::Distribution), the methods of which return
+/// the quantities that can be calculated from the simulations.
+///
+/// The other methods of [`MonteCarlo`] call the corresponding methods on the result of
+/// [`MonteCarlo::simulate`]. The exception is the method [`MonteCarlo::simulate_pvalue`].
+/// `self.simulate_pvalue(x)` returns the same value as `self.simulate.pvalue(x)` but uses much
+/// less memory.
 pub struct MonteCarlo<S> {
     /// Number of iterations of the Monte-Carlo simulation.
     pub iterations: usize,
@@ -85,6 +94,9 @@ impl<S: Sample> MonteCarlo<S> {
 
     /// Runs a Monte-Carlo simulation and returns a value representing the distribution of
     /// generated statistics.
+    ///
+    /// # Memory usage
+    /// Use `self.simulate_pvalue(x)` instead of `self.simulate.pvalue(x)` to reduce memory usage.
     pub fn simulate(mut self) -> Distribution {
         let full_distribution: Vec<f64> = (0..self.iterations)
             .map(|_| self.simulate_iteration())
@@ -98,6 +110,8 @@ impl<S: Sample> MonteCarlo<S> {
     /// Currently the quantiles are not exact.
     ///
     /// Returns `None` if `self.iterations` is not big enough.
+    ///
+    /// Corresponds to [`Distribution::quantiles`].
     pub fn simulate_distribution(self) -> Option<Vec<f64>> {
         self.simulate().quantiles()
     }
@@ -105,13 +119,17 @@ impl<S: Sample> MonteCarlo<S> {
     /// Runs a Monte-Carlo simulation and returns the value of the statistic, such that
     /// a statistic is less the returned values with probability `alpha`.
     ///
-    /// Essentially the inverse to [`Self::simulate_pvalue`]
+    /// Essentially the inverse to [`Self::simulate_pvalue`].
+    ///
+    /// Corresponds to [`Distribution::quantile_of`].
     pub fn simulate_statistic(self, alpha: f64) -> f64 {
         self.simulate().quantile_of(alpha)
     }
 
     /// Runs a Monte-Carlo simulation and returns the mean and the standard deviation from the
     /// generated statistics.
+    ///
+    /// Corresponds to [`Distribution::mean`] and [`Distribution::stdev`].
     pub fn simulate_mean_stdev(self) -> (f64, f64) {
         // Collect statistics from each iteration into a vector.
         let full_distribution = self.simulate();
