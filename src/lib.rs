@@ -95,7 +95,7 @@
 //! inside a quarter unit circle centered at a corner is equal to the ratio of their areas, which
 //! is equal to π/4.
 //!
-//! This can be accomplished by implementing [Sample] in the following way:
+//! This can be accomplished by implementing [Sample](crate::sample::Sample) in the following way:
 //!
 //! ```
 //! use rand::Rng;

@@ -182,7 +182,7 @@ impl<D> KSSample<D> {
 /// Unlike the Kolmogorov-Smirnov test where the `D_max` statistic is calculated between the dataset
 /// and the apriori distribution, Lilliefors test requires one to calculate the `D_max` statistic
 /// between the dataset and a distribution that have been fit to it. Hence is the dependence on the
-/// [`FittingDistribution`] trait.
+/// [`DistributionFit`] trait.
 ///
 /// [`LillieforsSample`] acts as a wrapper for [`KSSample`] with redefined [`Sample::evaluate`] method.
 /// The parameter `Gen` corresponds to the parameter of `D` of [`KSSample`]. The parameter `Fit`
@@ -224,7 +224,7 @@ where
     }
 
     /// Behaves identically to [`KSSample::evaluate`], except uses the distribution fit to
-    /// the stored dataset by [`FittingDistribution::fit`] instead of `self.distr()`.
+    /// the stored dataset by [`DistributionFit::fit`] instead of `self.distr()`.
     fn evaluate(&self) -> f64 {
         let sample_distr = self.fit_kind.fit(&self.inner.samples);
         self.inner.dmax(&sample_distr)

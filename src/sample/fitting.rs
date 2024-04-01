@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Contains [`FittingDistribution`] trait and its implementors for conducting a Lilliefors test.
+//! Contains [`DistributionFit`] trait and its implementors for conducting a Lilliefors test.
 //!
 //! Conducting a Lilliefors test requires a method to construct a distribution of the given kind
-//! from the dataset. [`FittingDistribution`] is a way to describe such a method.
+//! from the dataset. [`DistributionFit`] is a way to describe such a method.
 use statrs::{distribution::Normal, statistics::Statistics};
 
 /// A trait to construct probability distribution from a dataset
